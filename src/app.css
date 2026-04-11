@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+
+:root {
+  --neon-blue: #00f0ff;
+  --bg-dark: #121212;
+  --surface: #1e1e1e;
+  --primary: #bb86fc;
+  --secondary: #03dac6;
+  --on-surface: #ffffff;
+  --on-surface-variant: #b3b3b3;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--on-surface);
+  overflow: hidden;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+/* Material Elevations */
+.elevation-1 { box-shadow: 0 2px 1px -1px rgba(0,0,0,0.2), 0 1px 1px 0 rgba(0,0,0,0.14), 0 1px 3px 0 rgba(0,0,0,0.12); }
+.elevation-2 { box-shadow: 0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12); }
+.elevation-4 { box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12); }
+
+/* Material Buttons */
+.btn {
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 0 16px;
+  height: 36px;
+  border-radius: 4px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--primary);
+}
+.btn-text:hover { background: rgba(187, 134, 252, 0.08); }
+
+.btn-outlined {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid rgba(187, 134, 252, 0.5);
+}
+.btn-outlined:hover { background: rgba(187, 134, 252, 0.04); border-color: var(--primary); }
+
+.btn-contained {
+  background: var(--primary);
+  color: #000;
+  box-shadow: 0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12);
+}
+.btn-contained:hover {
+  background: #cba0fc;
+  box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
+}
+
+.cur-pointer { cursor: pointer; }
+
+/* Form inputs styling */
+.mat-select {
+  background: #2c2c2c;
+  color: var(--on-surface);
+  border: none;
+  border-bottom: 2px solid #555;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px 4px 0 0;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.mat-select:focus {
+  border-bottom-color: var(--primary);
+}
