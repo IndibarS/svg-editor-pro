@@ -749,7 +749,7 @@
                 {@html svgString.replace(
                     '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n',
                     "",
-                ).replace('<svg ', '<svg style="overflow: visible;" ')}
+                )}
             </div>
 
             <!-- Darkening Shroud (Outer region) -->
@@ -763,7 +763,7 @@
             </svg>
 
             <!-- Interaction Overlay -->
-            {#if activeNode?.type === "path"}
+            {#if activeNode?.type === "path" && !modelStore.isEffectivelyHidden($modelStore.tree, activeNode.id)}
                 <svg
                     class="overlay"
                     viewBox="{vbX - 10000} {vbY - 10000} 20000 20000"
@@ -1126,7 +1126,7 @@
                         stroke-width={1.5 / scale}
                     />
                 </svg>
-            {:else if activeNode?.type === "circle"}
+            {:else if activeNode?.type === "circle" && !modelStore.isEffectivelyHidden($modelStore.tree, activeNode.id)}
                 {@const cx = parseFloat(activeNode.attributes.cx) || 0}
                 {@const cy = parseFloat(activeNode.attributes.cy) || 0}
                 {@const r = parseFloat(activeNode.attributes.r) || 0}
@@ -1186,7 +1186,7 @@
                         on:keydown={() => {}}
                     />
                 </svg>
-            {:else if activeNode?.type === "ellipse"}
+            {:else if activeNode?.type === "ellipse" && !modelStore.isEffectivelyHidden($modelStore.tree, activeNode.id)}
                 {@const cx = parseFloat(activeNode.attributes.cx) || 0}
                 {@const cy = parseFloat(activeNode.attributes.cy) || 0}
                 {@const rx = parseFloat(activeNode.attributes.rx) || 0}
@@ -1240,7 +1240,7 @@
                         on:keydown={() => {}}
                     />
                 </svg>
-            {:else if activeNode?.type === "rect"}
+            {:else if activeNode?.type === "rect" && !modelStore.isEffectivelyHidden($modelStore.tree, activeNode.id)}
                 {@const rx = parseFloat(activeNode.attributes.x) || 0}
                 {@const ry = parseFloat(activeNode.attributes.y) || 0}
                 {@const rw = parseFloat(activeNode.attributes.width) || 0}

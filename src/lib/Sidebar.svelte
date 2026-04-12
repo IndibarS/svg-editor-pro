@@ -66,6 +66,7 @@
 <div 
     class="node-block" 
     class:active={isActive} 
+    class:is-hidden={tree.hidden}
     style="margin-left: {depth * 10}px"
     role="button"
     tabindex="0"
@@ -90,11 +91,16 @@
             </button>
             {tree.type.toUpperCase()}
         </span>
-        {#if tree.type !== 'svg'}
-            <button class="icon-btn delete" on:click|stopPropagation={() => modelStore.deleteNode(tree.id)}>
-                <span class="material-icons" style="font-size:16px; transform:translateY(2px)">delete</span>
+        <div class="header-actions">
+            <button class="icon-btn toggle-vis" on:click|stopPropagation={() => modelStore.toggleVisibility(tree.id)}>
+                <span class="material-icons" style="font-size:16px; transform:translateY(2px)">{tree.hidden ? 'visibility_off' : 'visibility'}</span>
             </button>
-        {/if}
+            {#if tree.type !== 'svg'}
+                <button class="icon-btn delete" on:click|stopPropagation={() => modelStore.deleteNode(tree.id)}>
+                    <span class="material-icons" style="font-size:16px; transform:translateY(2px)">delete</span>
+                </button>
+            {/if}
+        </div>
     </div>
 
         {#if expanded}
@@ -343,6 +349,23 @@
     
     .icon-btn.delete:hover {
         color: #ff3366;
+    }
+
+    .icon-btn.toggle-vis:hover {
+        color: #00f0ff;
+    }
+
+    .node-header .header-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .node-block.is-hidden .title {
+        opacity: 0.4;
+    }
+    
+    .node-block.is-hidden .icon-btn.toggle-vis {
+        color: #555;
     }
 
     .attributes {

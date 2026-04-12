@@ -17,7 +17,8 @@ function createSvgModel() {
             xmlns: "http://www.w3.org/2000/svg"
         },
         children: [],
-        commands: []
+        commands: [],
+        hidden: false
     };
 
     const defaultPath = {
@@ -25,7 +26,8 @@ function createSvgModel() {
         type: 'path',
         attributes: { stroke: "#ffffff", fill: "#00000000", "stroke-width": "3", d: "" },
         children: [],
-        commands: [{ type: "M", x: 300, y: 300 }]
+        commands: [{ type: "M", x: 300, y: 300 }],
+        hidden: false
     };
     
     // Utility strictly inside this closure to initialize
@@ -77,14 +79,41 @@ function createSvgModel() {
         return null;
     };
 
+    const isEffectivelyHidden = (tree, nodeId) => {
+        const check = (node, parentHidden = false) => {
+            const currentHidden = parentHidden || node.hidden;
+            if (node.id === nodeId) return !!currentHidden;
+            for (let child of (node.children || [])) {
+                const res = check(child, currentHidden);
+                if (res !== null) return res;
+            }
+            return null;
+        };
+        return check(tree) || false;
+    };
+
     return {
         subscribe: store.subscribe,
         
+        isEffectivelyHidden,
+
         setActive: (id) => store.update(s => ({ ...s, activeNodeId: id })),
 
         updateAttribute: (id, key, val) => store.update(s => {
             const node = findNodeMap(s.tree, id);
-            if (node) node.attributes[key] = val;
+            if (node) {
+                node.attributes[key] = val;
+                s.tree = { ...s.tree };
+            }
+            return { ...s };
+        }),
+
+        toggleVisibility: (id) => store.update(s => {
+            const node = findNodeMap(s.tree, id);
+            if (node) {
+                node.hidden = !node.hidden;
+                s.tree = { ...s.tree };
+            }
             return { ...s };
         }),
 
@@ -93,6 +122,7 @@ function createSvgModel() {
             if (node && node.type === 'path') {
                 node.commands[index][key] = val;
                 node.attributes.d = cmdsToPath(node.commands);
+                s.tree = { ...s.tree };
             }
             return { ...s };
         }),
@@ -186,7 +216,8 @@ function createSvgModel() {
                 type,
                 attributes: attrs,
                 children: [],
-                commands: type === 'path' ? [{ type: "M", x: 200, y: 200 }] : []
+                commands: type === 'path' ? [{ type: "M", x: 200, y: 200 }] : [],
+                hidden: false
             };
             
             if (index === -1) {
@@ -228,9 +259,21 @@ function createSvgModel() {
         toSvgString: (astTree, clean = false) => {
             const renderNode = (node) => {
                 const isSelfClosing = ['rect', 'circle', 'path', 'line'].includes(node.type);
-                let attrStr = Object.entries(node.attributes).map(([k, v]) => `${k}="${v}"`).join(' ');
-                let isRoot = node === astTree;
-                let idStr = clean ? '' : (isRoot ? ` data-id="${node.id}"` : ` data-id="${node.id}" style="cursor: pointer;"`);
+                const isRoot = node === astTree;
+                
+                let effectiveAttrs = { ...node.attributes };
+                let styles = [];
+                if (node.hidden) styles.push("display: none !important;");
+                if (!clean && isRoot) styles.push("overflow: visible;");
+                if (!clean && !isRoot) styles.push("cursor: pointer;");
+                if (effectiveAttrs.style) styles.push(effectiveAttrs.style);
+
+                if (styles.length > 0) {
+                    effectiveAttrs.style = styles.join(' ');
+                }
+
+                let attrStr = Object.entries(effectiveAttrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+                let idStr = clean ? '' : ` data-id="${node.id}"`;
                 
                 if (node.children.length === 0 && isSelfClosing) {
                     return `<${node.type}${idStr} ${attrStr} />`;
@@ -281,7 +324,8 @@ function createSvgModel() {
                     type: el.tagName.toLowerCase(),
                     attributes: /** @type {any} */ ({}),
                     children: [],
-                    commands: []
+                    commands: [],
+                    hidden: false
                 };
                 Array.from(el.attributes).forEach(attr => {
                     node.attributes[attr.name] = attr.value;
