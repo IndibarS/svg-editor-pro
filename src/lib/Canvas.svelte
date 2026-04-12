@@ -121,6 +121,17 @@
         return null;
     }
 
+    const getLastPos = (commands, index) => {
+        let x = 0;
+        let y = 0;
+        for (let j = 0; j < index; j++) {
+            const cmd = commands[j];
+            if (cmd.x !== undefined) x = cmd.x;
+            if (cmd.y !== undefined) y = cmd.y;
+        }
+        return { x, y };
+    };
+
     function zoomTo(newScale, centerScreenX, centerScreenY) {
         // Essential safety floor to avoid division by zero or negative scale
         newScale = Math.max(0.000001, newScale);
@@ -818,13 +829,10 @@
                             />
                         {/if}
                         {#if cmd.type === "C"}
-                            {@const prevX =
-                                i > 0 ? (activeNode.commands[i - 1].x ?? 0) : 0}
-                            {@const prevY =
-                                i > 0 ? (activeNode.commands[i - 1].y ?? 0) : 0}
+                            {@const prev = getLastPos(activeNode.commands, i)}
                             <line
-                                x1={prevX}
-                                y1={prevY}
+                                x1={prev.x}
+                                y1={prev.y}
                                 x2={cmd.x1}
                                 y2={cmd.y1}
                                 stroke-width={1.5 / scale}
@@ -884,13 +892,10 @@
                             />
                         {/if}
                         {#if cmd.type === "Q"}
-                            {@const prevX =
-                                i > 0 ? (activeNode.commands[i - 1].x ?? 0) : 0}
-                            {@const prevY =
-                                i > 0 ? (activeNode.commands[i - 1].y ?? 0) : 0}
+                            {@const prev = getLastPos(activeNode.commands, i)}
                             <line
-                                x1={prevX}
-                                y1={prevY}
+                                x1={prev.x}
+                                y1={prev.y}
                                 x2={cmd.x1}
                                 y2={cmd.y1}
                                 stroke-width={1.5 / scale}
@@ -950,14 +955,7 @@
                             />
                         {/if}
                         {#if cmd.type === "S"}
-                            {@const prevX =
-                                i > 0
-                                    ? (activeNode.commands[i - 1]?.x ?? 0)
-                                    : 0}
-                            {@const prevY =
-                                i > 0
-                                    ? (activeNode.commands[i - 1]?.y ?? 0)
-                                    : 0}
+                            {@const prev = getLastPos(activeNode.commands, i)}
                             {@const prevCmd =
                                 i > 0 ? activeNode.commands[i - 1] : null}
                             {@const hasReflect =
@@ -965,12 +963,12 @@
                                 (prevCmd.type === "C" || prevCmd.type === "S")}
                             {@const cp = hasReflect
                                 ? resolveCP_S(activeNode.commands, i - 1)
-                                : { x: prevX, y: prevY }}
-                            {@const refX = 2 * prevX - cp.x}
-                            {@const refY = 2 * prevY - cp.y}
+                                : { x: prev.x, y: prev.y }}
+                            {@const refX = 2 * prev.x - cp.x}
+                            {@const refY = 2 * prev.y - cp.y}
                             <line
-                                x1={prevX}
-                                y1={prevY}
+                                x1={prev.x}
+                                y1={prev.y}
                                 x2={refX}
                                 y2={refY}
                                 stroke-width={1.5 / scale}
@@ -999,8 +997,8 @@
                                             index: i,
                                             key: "__reflect_x2",
                                             _fromIndex: i,
-                                            _prevX: prevX,
-                                            _prevY: prevY,
+                                            _prevX: prev.x,
+                                            _prevY: prev.y,
                                         };
                                     }}
                                     on:keydown={() => {}}
@@ -1045,14 +1043,7 @@
                             />
                         {/if}
                         {#if cmd.type === "T"}
-                            {@const prevX =
-                                i > 0
-                                    ? (activeNode.commands[i - 1]?.x ?? 0)
-                                    : 0}
-                            {@const prevY =
-                                i > 0
-                                    ? (activeNode.commands[i - 1]?.y ?? 0)
-                                    : 0}
+                            {@const prev = getLastPos(activeNode.commands, i)}
                             {@const prevCmd =
                                 i > 0 ? activeNode.commands[i - 1] : null}
                             {@const hasReflect =
@@ -1060,13 +1051,13 @@
                                 (prevCmd.type === "Q" || prevCmd.type === "T")}
                             {@const cp = hasReflect
                                 ? resolveCP_Q(activeNode.commands, i - 1)
-                                : { x: prevX, y: prevY }}
-                            {@const refX = 2 * prevX - cp.x}
-                            {@const refY = 2 * prevY - cp.y}
+                                : { x: prev.x, y: prev.y }}
+                            {@const refX = 2 * prev.x - cp.x}
+                            {@const refY = 2 * prev.y - cp.y}
                             <!-- Lines first (below circles) -->
                             <line
-                                x1={prevX}
-                                y1={prevY}
+                                x1={prev.x}
+                                y1={prev.y}
                                 x2={refX}
                                 y2={refY}
                                 stroke-width={1.5 / scale}
@@ -1104,8 +1095,8 @@
                                             index: i,
                                             key: "__reflect_x1",
                                             _fromIndex: i,
-                                            _prevX: prevX,
-                                            _prevY: prevY,
+                                            _prevX: prev.x,
+                                            _prevY: prev.y,
                                         };
                                     }}
                                     on:keydown={() => {}}
