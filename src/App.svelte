@@ -2,10 +2,12 @@
     import { modelStore } from './store.js';
     import Sidebar from './lib/Sidebar.svelte';
     import Canvas from './lib/Canvas.svelte';
+    import SupportModal from './lib/SupportModal.svelte';
 
     let selectedElement = 'path';
     let sidebarWidth = 320;
     let resizing = false;
+    let showSupportModal = false;
 
     function startResize(e) {
         e.preventDefault();
@@ -74,9 +76,13 @@
                 <input type="file" accept=".svg" on:change={loadSVG} style="display:none;" />
             </label>
             <button class="btn btn-contained" style="margin-left: 16px;" on:click={saveSVG}>Save to SVG</button>
+            <button class="icon-btn coffee-btn" style="margin-left: 12px;" on:click={() => showSupportModal = true} aria-label="Support the creator">
+                <span class="material-icons">coffee</span>
+            </button>
         </div>
     </header>
 
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="app-content" on:mousemove={handleResizeMove} on:mouseup={stopResize}>
         <!-- Sidebar Panel -->
         <aside class="side-panel elevation-2" style="width: {sidebarWidth}px;">
@@ -98,6 +104,11 @@
             {/key}
         </div>
     </div>
+
+    <SupportModal 
+        show={showSupportModal} 
+        onClose={() => showSupportModal = false} 
+    />
 </main>
 
 <style>
@@ -175,5 +186,35 @@
     .canvas-area {
         flex: 1;
         position: relative;
+    }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .coffee-btn {
+        color: #ff9800;
+    }
+
+    .coffee-btn:hover {
+        color: #ffa726;
+        background: rgba(255, 152, 0, 0.1);
+    }
+
+    .coffee-btn .material-icons {
+        font-size: 24px;
     }
 </style>
