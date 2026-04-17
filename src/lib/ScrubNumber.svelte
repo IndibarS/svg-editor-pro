@@ -15,7 +15,7 @@
         dragging = true;
         startX = e.clientX;
         // Parse float handles strings properly, otherwise default to 0
-        startVal = value;
+        startVal = parseFloat(String(value));
         if (isNaN(startVal)) startVal = 0;
         
         // Optional pointer lock for infinite scrubbing avoiding screen edges
