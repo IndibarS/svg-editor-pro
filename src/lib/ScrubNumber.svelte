@@ -15,7 +15,7 @@
         dragging = true;
         startX = e.clientX;
         // Parse float handles strings properly, otherwise default to 0
-        startVal = parseFloat(value);
+        startVal = value;
         if (isNaN(startVal)) startVal = 0;
         
         // Optional pointer lock for infinite scrubbing avoiding screen edges
@@ -47,9 +47,16 @@
     }
     
     function handleInputChange() {
-        const parsed = parseFloat(value);
+        const parsed = parseFloat(String(value));
         value = isNaN(parsed) ? 0 : parsed;
         dispatch('change', value);
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter') {
+            handleInputChange();
+            e.target.blur();
+        }
     }
 </script>
 
@@ -60,7 +67,7 @@
     <div class="scrub-label" on:pointerdown={handlePointerDown} style="cursor: ew-resize;" title="Drag to adjust length">
         {label}
     </div>
-    <input type="text" bind:value class="scrub-input" on:change={handleInputChange} />
+    <input type="text" bind:value class="scrub-input" on:change={handleInputChange} on:keydown={handleKeyDown} />
 </div>
 
 <style>
