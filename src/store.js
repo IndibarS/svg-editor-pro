@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 function createSvgModel() {
     let idCounter = 1;
+    let clipboard = null; // stores a deep-cloned node ready to paste
     
     // Physical export bounds
     const defaultWidth = 600;
@@ -91,6 +92,52 @@ function createSvgModel() {
         };
         return check(tree) || false;
     };
+
+    // --- Copy / Paste helpers ---
+
+    const deepClone = (node) => ({
+        id: node.id,
+        type: node.type,
+        attributes: { ...node.attributes },
+        children: (node.children || []).map(deepClone),
+        commands: (node.commands || []).map(c => ({ ...c })),
+        hidden: node.hidden
+    });
+
+    const deepCloneWithNewIds = (node, newId) => ({
+        id: newId(),
+        type: node.type,
+        attributes: { ...node.attributes },
+        children: (node.children || []).map(c => deepCloneWithNewIds(c, newId)),
+        commands: (node.commands || []).map(c => ({ ...c })),
+        hidden: node.hidden
+    });
+
+    /** Nudges the top-level node's position by dx/dy based on its type */
+    const offsetNode = (node, dx, dy) => {
+        const a = node.attributes;
+        if (node.type === 'rect' || node.type === 'image') {
+            if (a.x !== undefined) a.x = (parseFloat(String(a.x)) || 0) + dx;
+            if (a.y !== undefined) a.y = (parseFloat(String(a.y)) || 0) + dy;
+        } else if (node.type === 'circle' || node.type === 'ellipse') {
+            if (a.cx !== undefined) a.cx = (parseFloat(String(a.cx)) || 0) + dx;
+            if (a.cy !== undefined) a.cy = (parseFloat(String(a.cy)) || 0) + dy;
+        } else if (node.type === 'path') {
+            node.commands = node.commands.map(cmd => {
+                const c = { ...cmd };
+                if (c.x  !== undefined) c.x  += dx;
+                if (c.y  !== undefined) c.y  += dy;
+                if (c.x1 !== undefined) c.x1 += dx;
+                if (c.y1 !== undefined) c.y1 += dy;
+                if (c.x2 !== undefined) c.x2 += dx;
+                if (c.y2 !== undefined) c.y2 += dy;
+                return c;
+            });
+            node.attributes.d = cmdsToPath(node.commands);
+        }
+        // groups: children keep their own relative positions, no offset needed
+    };
+
 
     return {
         subscribe: store.subscribe,
@@ -354,7 +401,49 @@ function createSvgModel() {
         toPathData: (node) => {
             if (!node || node.type !== 'path') return "";
             return cmdsToPath(node.commands);
-        }
+        },
+
+        copyNode: (id) => store.update(s => {
+            const node = findNodeMap(s.tree, id);
+            if (!node || id === s.tree.id) return s;
+            // Deep clone without touching the store — just snapshot into clipboard
+            clipboard = deepClone(node);
+            return s; // no state change
+        }),
+
+        pasteNode: () => store.update(s => {
+            if (!clipboard) return s;
+            // Find parent of active node to paste as a sibling, else append to root
+            const parent = findParent(s.tree, s.activeNodeId) || s.tree;
+            const clone = deepCloneWithNewIds(clipboard, () => 'node_' + (s.idCounter++));
+            offsetNode(clone, 10, 10);
+            // Insert right after active node if possible
+            const insertIdx = parent.children.findIndex(c => c.id === s.activeNodeId);
+            if (insertIdx !== -1) {
+                parent.children.splice(insertIdx + 1, 0, clone);
+            } else {
+                parent.children.push(clone);
+            }
+            s.activeNodeId = clone.id;
+            return { ...s };
+        }),
+
+        duplicateNode: (id) => store.update(s => {
+            const node = findNodeMap(s.tree, id);
+            if (!node || id === s.tree.id) return s;
+            const parent = findParent(s.tree, id) || s.tree;
+            const clone = deepCloneWithNewIds(node, () => 'node_' + (s.idCounter++));
+            offsetNode(clone, 10, 10);
+            const insertIdx = parent.children.findIndex(c => c.id === id);
+            if (insertIdx !== -1) {
+                parent.children.splice(insertIdx + 1, 0, clone);
+            } else {
+                parent.children.push(clone);
+            }
+            s.activeNodeId = clone.id;
+            return { ...s };
+        }),
+
     };
 }
 

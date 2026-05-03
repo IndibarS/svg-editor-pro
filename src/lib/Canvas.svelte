@@ -212,16 +212,33 @@
     }
 
     function handleKeydown(e) {
+        // Don't intercept when user is typing in an input field
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+
         if (e.ctrlKey || e.metaKey) {
-            if (e.key === "+" || e.key === "=") {
+            if (e.key === '+' || e.key === '=') {
                 e.preventDefault();
                 zoomTo(scale * 1.1);
-            } else if (e.key === "-") {
+            } else if (e.key === '-') {
                 e.preventDefault();
                 zoomTo(scale / 1.1);
-            } else if (e.key === "0") {
+            } else if (e.key === '0') {
                 e.preventDefault();
                 zoomTo(1);
+            } else if (e.key === 'c') {
+                if (activeNodeId && activeNodeId !== tree.id) {
+                    e.preventDefault();
+                    modelStore.copyNode(activeNodeId);
+                }
+            } else if (e.key === 'v') {
+                e.preventDefault();
+                modelStore.pasteNode();
+            } else if (e.key === 'd') {
+                if (activeNodeId && activeNodeId !== tree.id) {
+                    e.preventDefault();
+                    modelStore.duplicateNode(activeNodeId);
+                }
             }
         }
     }
