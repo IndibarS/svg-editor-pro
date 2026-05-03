@@ -90,6 +90,7 @@
     class:active={isActive} 
     class:is-hidden={tree.hidden}
     style="margin-left: {depth * 10}px"
+    data-node-id={tree.id}
     role="button"
     tabindex="0"
     aria-label="Select {tree.type} layer"

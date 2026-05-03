@@ -444,6 +444,27 @@ function createSvgModel() {
             return { ...s };
         }),
 
+        cutNode: (id) => store.update(s => {
+            const node = findNodeMap(s.tree, id);
+            if (!node || id === s.tree.id) return s;
+            clipboard = deepClone(node);
+            const parent = findParent(s.tree, id);
+            if (parent) {
+                parent.children = parent.children.filter(c => c.id !== id);
+                if (s.activeNodeId === id) s.activeNodeId = parent.id;
+            }
+            return { ...s };
+        }),
+
+        unhideAll: () => store.update(s => {
+            const unhide = (node) => {
+                node.hidden = false;
+                (node.children || []).forEach(unhide);
+            };
+            unhide(s.tree);
+            return { ...s };
+        }),
+
     };
 }
 

@@ -216,6 +216,14 @@
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (tag === 'input' || tag === 'textarea') return;
 
+        // Delete key (no modifier needed)
+        if (e.key === 'Delete' || e.key === 'Backspace' && e.metaKey) {
+            if (activeNodeId && activeNodeId !== tree.id) {
+                modelStore.deleteNode(activeNodeId);
+            }
+            return;
+        }
+
         if (e.ctrlKey || e.metaKey) {
             if (e.key === '+' || e.key === '=') {
                 e.preventDefault();
@@ -238,6 +246,22 @@
                 if (activeNodeId && activeNodeId !== tree.id) {
                     e.preventDefault();
                     modelStore.duplicateNode(activeNodeId);
+                }
+            } else if (e.key === 'x') {
+                if (activeNodeId && activeNodeId !== tree.id) {
+                    e.preventDefault();
+                    modelStore.cutNode(activeNodeId);
+                }
+            } else if (e.key === 'h') {
+                e.preventDefault();
+                if (e.altKey) {
+                    // Ctrl+Alt+H → unhide all
+                    modelStore.unhideAll();
+                } else {
+                    // Ctrl+H → toggle active node visibility
+                    if (activeNodeId && activeNodeId !== tree.id) {
+                        modelStore.toggleVisibility(activeNodeId);
+                    }
                 }
             }
         }
