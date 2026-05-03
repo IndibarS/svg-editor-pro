@@ -210,6 +210,7 @@ function createSvgModel() {
             else if (type === 'ellipse') attrs = { ...attrs, cx: 300, cy: 300, rx: 80, ry: 50 };
             else if (type === 'path') attrs = { ...attrs, d: "M 200 200" };
             else if (type === 'g') attrs = /** @type {any} */ ({});
+            else if (type === 'image') attrs = /** @type {any} */ ({ href: '', x: 100, y: 100, width: 200, height: 200, preserveAspectRatio: 'xMidYMid meet' });
 
             const newNode = {
                 id: 'node_' + (s.idCounter++),
@@ -258,7 +259,7 @@ function createSvgModel() {
 
         toSvgString: (astTree, clean = false) => {
             const renderNode = (node) => {
-                const isSelfClosing = ['rect', 'circle', 'path', 'line'].includes(node.type);
+                const isSelfClosing = ['rect', 'circle', 'path', 'line', 'image'].includes(node.type);
                 const isRoot = node === astTree;
                 
                 let effectiveAttrs = { ...node.attributes };

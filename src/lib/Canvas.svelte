@@ -1299,6 +1299,68 @@
                         on:keydown={() => {}}
                     />
                 </svg>
+            {:else if activeNode?.type === "image" && !modelStore.isEffectivelyHidden($modelStore.tree, activeNode.id)}
+                {@const ix = parseFloat(activeNode.attributes.x) || 0}
+                {@const iy = parseFloat(activeNode.attributes.y) || 0}
+                {@const iw = parseFloat(activeNode.attributes.width) || 0}
+                {@const ih = parseFloat(activeNode.attributes.height) || 0}
+                {@const imgAngle = (Math.atan2(ih, iw) * 180) / Math.PI}
+                <svg
+                    class="overlay"
+                    viewBox="{vbX - 10000} {vbY - 10000} 20000 20000"
+                    style="position: absolute; top: -10000px; left: -10000px; width: 20000px; height: 20000px; z-index: 20; pointer-events: none;"
+                >
+                    <!-- Outline helper -->
+                    <rect
+                        x={ix}
+                        y={iy}
+                        width={iw}
+                        height={ih}
+                        fill="none"
+                        stroke="rgba(0, 240, 255, 0.4)"
+                        stroke-width={1.5 / scale}
+                        stroke-dasharray="{6 / scale} {4 / scale}"
+                    />
+                    <!-- Move handle (top-left) -->
+                    <circle
+                        cx={ix}
+                        cy={iy}
+                        r={6 / scale}
+                        stroke-width={2 / scale}
+                        role="button"
+                        tabindex="0"
+                        aria-label="Image Position"
+                        class="p-anchor"
+                        style="cursor: {createMoveCursor()};"
+                        on:mousedown={(e) =>
+                            startAttributeDrag(activeNode.id, ["x", "y"], e)}
+                        on:keydown={() => {}}
+                    />
+                    <!-- Resize handle (bottom-right) -->
+                    <circle
+                        cx={ix + iw}
+                        cy={iy + ih}
+                        r={5 / scale}
+                        stroke-width={2 / scale}
+                        role="button"
+                        tabindex="0"
+                        aria-label="Image Size"
+                        class="p-control"
+                        style="cursor: {createResizeCursor(imgAngle)};"
+                        on:mousedown={(e) =>
+                            startAttributeDrag(
+                                activeNode.id,
+                                ["width", "height"],
+                                e,
+                                {
+                                    x: ix,
+                                    y: iy,
+                                    cursorURL: createResizeCursor(imgAngle),
+                                },
+                            )}
+                        on:keydown={() => {}}
+                    />
+                </svg>
             {/if}
         </div>
     </div>

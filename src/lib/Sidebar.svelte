@@ -18,6 +18,8 @@
     if (tree.type === 'circle') attributesToEdit.push('cx', 'cy', 'r');
     if (tree.type === 'ellipse') attributesToEdit.push('cx', 'cy', 'rx', 'ry');
     if (tree.type === 'svg') attributesToEdit.push('width', 'height'); // viewBox is separated manually
+    if (tree.type === 'image') attributesToEdit = ['x', 'y', 'width', 'height', 'href', 'preserveAspectRatio'];
+
     function isColorSetting(key) {
         return key === 'fill' || key === 'stroke';
     }
@@ -27,13 +29,33 @@
     }
 
     function isEnumSetting(key) {
-        return ['stroke-linecap', 'stroke-linejoin'].includes(key);
+        return ['stroke-linecap', 'stroke-linejoin', 'preserveAspectRatio'].includes(key);
+    }
+
+    function isImageHref(key) {
+        return key === 'href' && tree.type === 'image';
     }
 
     const enums = {
         'stroke-linecap': ['butt', 'round', 'square'],
-        'stroke-linejoin': ['miter', 'round', 'bevel']
+        'stroke-linejoin': ['miter', 'round', 'bevel'],
+        'preserveAspectRatio': ['xMidYMid meet', 'xMidYMid slice', 'none']
     };
+
+    /** @type {HTMLInputElement|null} */
+    let imageFileInput = null;
+
+    function handleImageFilePick(e) {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const dataUrl = /** @type {string} */ (ev.target?.result);
+            if (dataUrl) modelStore.updateAttribute(tree.id, 'href', dataUrl);
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
 
     // Ordered key sequences per command type (including derived delta keys)
     const cmdKeyOrder = {
@@ -116,7 +138,40 @@
                         isColorSetting(key) ? (key === 'stroke' ? '#000000' : '#00000000') : '0'))}
                 <div class="attr-row" role="presentation" on:click|stopPropagation>
                     
-                    {#if isColorSetting(key) && val.startsWith('#')}
+                    {#if isImageHref(key)}
+                        <!-- Image href editor: browse + URL input + thumbnail -->
+                        <div class="image-href-editor">
+                            <div class="href-row">
+                                <span class="lbl">src</span>
+                                <input 
+                                    type="text" 
+                                    class="href-input"
+                                    placeholder="https:// or browse…"
+                                    value={val && val.startsWith('data:') ? '(embedded image)' : val}
+                                    on:focus={(e) => { if (val && val.startsWith('data:')) e.currentTarget.value = val; }}
+                                    on:blur={(e) => { if (!e.currentTarget.value.startsWith('data:') || val !== e.currentTarget.value) modelStore.updateAttribute(tree.id, key, e.currentTarget.value); }}
+                                    on:keydown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+                                />
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                <button class="browse-btn" on:click={() => imageFileInput?.click()} title="Browse local file">
+                                    <span class="material-icons" style="font-size:15px;">folder_open</span>
+                                </button>
+                                <input 
+                                    bind:this={imageFileInput}
+                                    type="file" 
+                                    accept="image/*" 
+                                    style="display:none;"
+                                    on:change={handleImageFilePick}
+                                />
+                            </div>
+                            {#if val && val.length > 0}
+                                <div class="img-preview-wrap">
+                                    <img src={val} alt="preview" class="img-preview" />
+                                </div>
+                            {/if}
+                        </div>
+                    {:else if isColorSetting(key) && val.startsWith('#')}
                         <InlineColorPicker label={key} hexWithAlpha={val} on:change={(e) => modelStore.updateAttribute(tree.id, key, e.detail)} />
                     {:else if isNumericSetting(key)}
                         <ScrubNumber label={key} value={val} 
@@ -124,14 +179,14 @@
                             on:change={(e) => modelStore.updateAttribute(tree.id, key, e.detail)} />
                     {:else if isEnumSetting(key)}
                         <div class="enum-selector">
-                            <span class="lbl">{key.replace('stroke-', '')}</span>
+                            <span class="lbl">{key === 'preserveAspectRatio' ? 'fit' : key.replace('stroke-', '')}</span>
                             <div class="segmented-control">
                                 {#each enums[key] as option}
                                     <button 
                                         class:active={val === option} 
                                         on:click={() => modelStore.updateAttribute(tree.id, key, option)}
                                     >
-                                        {option}
+                                        {option === 'xMidYMid meet' ? 'meet' : option === 'xMidYMid slice' ? 'slice' : option}
                                     </button>
                                 {/each}
                             </div>
@@ -260,6 +315,7 @@
                 <button on:click={() => modelStore.addElement('circle', tree.id, index)}>Circle</button>
                 <button on:click={() => modelStore.addElement('ellipse', tree.id, index)}>Ellipse</button>
                 <button on:click={() => modelStore.addElement('path', tree.id, index)}>Path</button>
+                <button on:click={() => modelStore.addElement('image', tree.id, index)}>Image</button>
                 <button on:click={() => modelStore.addElement('g', tree.id, index)}>Group</button>
             </div>
         </div>
@@ -290,6 +346,7 @@
                 <button on:click={() => modelStore.addElement('circle', tree.id, (tree.children || []).length)}>Circle</button>
                 <button on:click={() => modelStore.addElement('ellipse', tree.id, (tree.children || []).length)}>Ellipse</button>
                 <button on:click={() => modelStore.addElement('path', tree.id, (tree.children || []).length)}>Path</button>
+                <button on:click={() => modelStore.addElement('image', tree.id, (tree.children || []).length)}>Image</button>
                 <button on:click={() => modelStore.addElement('g', tree.id, (tree.children || []).length)}>Group</button>
             </div>
         </div>
@@ -571,5 +628,79 @@
     .segmented-control button:hover:not(.active) {
         background: #222;
         color: #bbb;
+    }
+
+    /* Image href editor */
+    .image-href-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .href-row {
+        display: flex;
+        align-items: center;
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 4px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .href-row:focus-within {
+        border-color: #00f0ff;
+    }
+
+    .href-input {
+        flex: 1;
+        background: transparent;
+        color: #eee;
+        border: none;
+        outline: none;
+        padding: 4px 6px;
+        font-size: 0.8rem;
+        font-family: monospace;
+        min-width: 0;
+    }
+
+    .href-input::placeholder {
+        color: #555;
+    }
+
+    .browse-btn {
+        background: #252525;
+        border: none;
+        border-left: 1px solid #333;
+        color: #888;
+        cursor: pointer;
+        padding: 4px 6px;
+        display: flex;
+        align-items: center;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .browse-btn:hover {
+        background: #333;
+        color: #00f0ff;
+    }
+
+    .img-preview-wrap {
+        width: 100%;
+        background: repeating-conic-gradient(#1a1a1a 0% 25%, #222 0% 50%) 0 0 / 12px 12px;
+        border-radius: 4px;
+        border: 1px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        max-height: 120px;
+    }
+
+    .img-preview {
+        max-width: 100%;
+        max-height: 120px;
+        object-fit: contain;
+        display: block;
     }
 </style>
